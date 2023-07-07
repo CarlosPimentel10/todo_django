@@ -60,6 +60,13 @@
                 <!-- To Do Form -->
                 <form action="{% url 'addTask' %}" method="POST">
                     {% csrf_token %} 
+                    {% if messages %}
+                    <ul class="messages">
+                        {% for message in messages %}
+                            <li>{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                        {% endif %}
                     <div class="form-group">
                         <span style="display: flex;">
                             <input type="text" name="task" class="form-control" placeholder="Add a task">

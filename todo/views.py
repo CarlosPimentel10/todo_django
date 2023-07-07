@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, HttpResponse, get_object_or_404
+from django.contrib import messages
 from .models import Task
 
 
@@ -7,6 +8,8 @@ def addTask(request):
         task = request.POST.get('task')
         if task:
             Task.objects.create(task=task)
+        else:
+            messages.error(request, 'Task cannot be blank.')  # Display error messag
     return redirect('home')
 
 def mark_as_done(request, pk):
