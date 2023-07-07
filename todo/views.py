@@ -15,7 +15,7 @@ def addTask(request):
 def mark_as_done(request, pk):
     task = get_object_or_404(Task, pk=pk)
     task.is_completed = True
-    task.save()
+    task.save(update_fields=['is_completed']) # performance optimization
     return redirect('home')
 
 def mark_as_undone(request, pk):
