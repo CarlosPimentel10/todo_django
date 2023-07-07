@@ -48,17 +48,18 @@ def edit_task(request, pk):
 
 def delete_task(request, pk):
     task = get_object_or_404(Task, pk=pk)
-    
+
     if request.method == 'POST':
         confirmed = request.POST.get('confirmed')
-        if confirmed == True:
+
+        if confirmed == 'true':
             task.delete()
             messages.success(request, 'Task deleted successfully.')
         else:
             messages.info(request, 'Deletion canceled.')
 
-            return redirect('home')
-    context = {
-        'task':task,
-        }
+        return redirect('home')
+
+    context = {'task': task}
     return render(request, 'delete_task.html', context)
+
