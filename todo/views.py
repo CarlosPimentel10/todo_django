@@ -30,10 +30,14 @@ def edit_task(request, pk):
     if request.method == "POST":
         # Handle POST request
         new_task = request.POST.get('task')
-
-        get_task.task = new_task
-        get_task.save()
-        return redirect('home')
+        
+        if new_task:
+            get_task.task = new_task
+            get_task.save()
+            return redirect('home')
+        else:
+            messages.error(request, 'Task cannot be blank.')  # Display error messag
+            return redirect('edit_task', pk=pk)
     else:
         context = {
             'get_task': get_task,
