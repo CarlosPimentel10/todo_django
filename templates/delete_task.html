@@ -1,0 +1,26 @@
+<h1>Delete Task</h1>
+<p>Are you sure you want to delete this task?</p>
+<form action="{% url 'delete_task' task.pk %}" method="POST" id="delete-form">
+  {% csrf_token %}
+  <input type="hidden" name="confirmed" id="confirmed-input" value="false">
+  <button type="submit" class="btn btn-danger">Confirm Delete</button>
+  <button type="button" class="btn btn-secondary" onclick="cancelDeletion()">Cancel</button>
+</form>
+
+<script>
+function cancelDeletion() {
+  document.getElementById('confirmed-input').value = 'false';
+  document.getElementById('delete-form').submit();
+}
+
+window.onload = function() {
+  var deleteButton = document.querySelector('.btn-danger');
+  deleteButton.addEventListener('click', function(event) {
+    event.preventDefault();
+    if (confirm('Are you sure you want to delete this task?')) {
+      document.getElementById('confirmed-input').value = 'true';
+      document.getElementById('delete-form').submit();
+    }
+  });
+}
+</script>
