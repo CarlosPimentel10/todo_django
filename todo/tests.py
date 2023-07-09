@@ -117,3 +117,50 @@ class MarkAsUndoneViewTest(TestCase):
         # Optional: Check if the task state is unchanged
         self.task.refresh_from_db()
         self.assertTrue(self.task.is_completed)  # Ensure the task is still marked as completed
+
+
+class EditTaskViewTest(TestCase):
+    
+    def setUp(self):
+        self.client = Client()
+        self.task = Task.objects.create(task='Task test')
+    
+    def edit_task_success(self):
+        url = reverse('edit_task', args=[self.task.id])
+        data = {'task': 'New Task'}
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, 302)
+        self.task.refresh_from_db()
+        # Check if the task was updated
+        self.assertEqual(self.task.task, 'New Task')
+    
+    def edit_task_blank(self):
+        url = reverse('edit_task', args=[self.task.id])
+        data = {'task': ''}
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, 302)
+        self.task.refresh_from_db()
+        # check if the task remains unchanged
+        self.assertEqual(self.task.task, 'Test Task')
+        # Check if an error message was added
+        messages = list(response.wsgi_request._messages)
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(str(messages[0]), 'Task cannot be blank.')
+    
+    def test_edit_task_invalid_task(self):
+        invalid_pk = 999  # Assuming this PK does not exist
+        url = reverse('edit_task', args=[invalid_pk])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)  # Check if a 404 response is returned
+
+        # Optional: Check if the task state is unchanged
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.task, 'Task test')
+
+    def test_edit_task_get_request(self):
+        url = reverse('edit_task', args=[self.task.id])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'edit_task.html')
+        self.assertIn('get_task', response.context)
+        self.assertEqual(response.context['get_task'], self.task)
