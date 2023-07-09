@@ -164,3 +164,47 @@ class EditTaskViewTest(TestCase):
         self.assertTemplateUsed(response, 'edit_task.html')
         self.assertIn('get_task', response.context)
         self.assertEqual(response.context['get_task'], self.task)
+
+
+class DeleteTaskViewTest(TestCase):
+
+    def setUp(self):
+        self.client = Client()
+        self.task = Task.objects.create(task='Test Task')
+
+    def test_delete_task_confirmed(self):
+        url = reverse('delete_task', args=[self.task.pk])
+        data = {'confirmed': 'true'}
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, 302)  # Check if the view redirects
+        self.assertFalse(Task.objects.filter(pk=self.task.pk).exists())  # Check if the task was deleted
+        messages = list(response.wsgi_request._messages)
+        self.assertEqual(len(messages), 1)  # Check if a success message was added
+        self.assertEqual(str(messages[0]), 'Task deleted successfully.')  # Check the success message content
+
+    def test_delete_task_canceled(self):
+        url = reverse('delete_task', args=[self.task.pk])
+        data = {'confirmed': 'false'}  # Assuming the user canceled the deletion
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, 302)  # Check if the view redirects
+        self.assertTrue(Task.objects.filter(pk=self.task.pk).exists())  # Check if the task still exists
+        messages = list(response.wsgi_request._messages)
+        self.assertEqual(len(messages), 1)  # Check if an info message was added
+        self.assertEqual(str(messages[0]), 'Deletion canceled.')  # Check the info message content
+
+    def test_delete_task_invalid_task(self):
+        invalid_pk = 999  # Assuming this PK does not exist
+        url = reverse('delete_task', args=[invalid_pk])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)  # Check if a 404 response is returned
+
+        # Optional: Check if the task still exists
+        self.assertTrue(Task.objects.filter(pk=self.task.pk).exists())
+
+    def test_delete_task_get_request(self):
+        url = reverse('delete_task', args=[self.task.pk])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)  # Check if the view returns a successful response
+        self.assertTemplateUsed(response, 'delete_task.html')  # Check if the correct template is used
+        self.assertIn('task', response.context)  # Check if the response contains the task object
+        self.assertEqual(response.context['task'], self.task)  # Check if the task object is correct
