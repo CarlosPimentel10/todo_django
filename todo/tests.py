@@ -94,3 +94,26 @@ class MarkAsDoneViewTest(TestCase):
         # Ensure the task is still marked as not completed
         self.assertFalse(self.task.is_completed)
 
+
+class MarkAsUndoneViewTest(TestCase):
+
+    def setUp(self):
+        self.client = Client()
+        self.task = Task.objects.create(task='Test Task', is_completed=True)
+
+    def test_mark_as_undone(self):
+        url = reverse('mark_as_undone', args=[self.task.id])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 302)  # Check if the view redirects
+        self.task.refresh_from_db()
+        self.assertFalse(self.task.is_completed)  # Check if the task is marked as not completed
+
+    def test_mark_as_undone_invalid_task(self):
+        invalid_pk = 999  # Assuming this PK does not exist
+        url = reverse('mark_as_undone', args=[invalid_pk])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)  # Check if a 404 response is returned
+
+        # Optional: Check if the task state is unchanged
+        self.task.refresh_from_db()
+        self.assertTrue(self.task.is_completed)  # Ensure the task is still marked as completed
