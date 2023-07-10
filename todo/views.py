@@ -14,6 +14,7 @@ def addTask(request):
             return redirect('home')
         else:
             messages.error(request, 'Task cannot be blank.')
+            return redirect('home')
 
     context = {'form': form}
     return render(request, 'home.html', context=context)
