@@ -1,16 +1,23 @@
 from django.shortcuts import render, redirect, HttpResponse, get_object_or_404
 from django.contrib import messages
 from .models import Task
+from .forms import TaskForm
 
 
 def addTask(request):
+    form = TaskForm(request.POST or None)
+
     if request.method == 'POST':
-        task = request.POST.get('task')
-        if task:
+        if form.is_valid():
+            task = form.cleaned_data['task']
             Task.objects.create(task=task)
+            return redirect('home')
         else:
-            messages.error(request, 'Task cannot be blank.')  # Display error messag
-    return redirect('home')
+            messages.error(request, 'Task cannot be blank.')
+
+    context = {'form': form}
+    return render(request, 'home.html', context=context)
+
 
 def mark_as_done(request, pk):
     task = get_object_or_404(Task, pk=pk)
@@ -62,4 +69,6 @@ def delete_task(request, pk):
 
     context = {'task': task}
     return render(request, 'delete_task.html', context)
+
+
 

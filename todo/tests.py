@@ -1,7 +1,10 @@
 from django.test import TestCase, Client
 from django.urls import reverse
+from django import forms
 from todo.models import Task
+from todo.forms import TaskForm
 from django.utils import timezone
+
 
 class TestHomeView(TestCase):
     def setUp(self):
@@ -208,3 +211,58 @@ class DeleteTaskViewTest(TestCase):
         self.assertTemplateUsed(response, 'delete_task.html')  # Check if the correct template is used
         self.assertIn('task', response.context)  # Check if the response contains the task object
         self.assertEqual(response.context['task'], self.task)  # Check if the task object is correct
+
+# Model Test
+class TaskModelTest(TestCase):
+
+    def test_task_model_str(self):
+        task = Task.objects.create(task='Test Task')
+        self.assertEqual(str(task), 'Test Task')
+    
+    def test_task_model_defaults(self):
+        task = Task.objects.create(task='Test Task')
+        self.assertFalse(task.is_completed)
+        self.assertIsNotNone(task.created_at)
+        self.assertIsNotNone(task.updated_at)
+    
+    def task_update(self):
+        task = Task.objects.create(task='Test Task')
+        task.task = 'Updated Task'
+        task.save()
+        updated_task = Task.objects.get(id=task.id)
+        self.assertEqual(updated_task.task, 'Updated Task')
+
+# Form Test
+
+class AddTaskFormTest(TestCase):
+
+    def setUp(self):
+        self.url = reverse('addTask')
+
+    def test_add_task_form(self):
+        # Check if the form page is rendered correctly
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+
+        # Verify the form is displayed and the CSRF token is present
+        form = response.context.get('form')
+        self.assertIsInstance(form, TaskForm)
+        self.assertContains(response, 'csrfmiddlewaretoken')
+
+        # Test form submission with valid data
+        data = {'task': 'test submission'}
+        response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 302)  # Expect a redirect
+
+        # Check if the task was created in the database
+        self.assertTrue(Task.objects.filter(task='test submission').exists())
+
+        # Check if the form submission redirects to the correct URL
+        self.assertRedirects(response, reverse('home'))
+
+        # Test form submission with blank data
+        data = {'task': ''}
+        response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 200)
+        # Check if form validation error is raised
+        self.assertFormError(response, 'form', 'task', 'This field is required.')
