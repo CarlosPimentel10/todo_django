@@ -32,25 +32,21 @@ def mark_as_undone(request, pk):
     return redirect('home')
 
 def edit_task(request, pk):
-    get_task = get_object_or_404(Task, pk=pk)
-
-    if request.method == "POST":
-        # Handle POST request
-        new_task = request.POST.get('task')
-        
-        if new_task:
-            get_task.task = new_task
-            get_task.save()
+    task = get_object_or_404(Task, pk=pk)
+    
+    if request.method == 'POST':
+        form = TaskForm(request.POST)
+        if form.is_valid():
+            task.task = form.cleaned_data['task']
+            task.save()
             return redirect('home')
         else:
-            messages.error(request, 'Task cannot be blank.')  # Display error messag
-            return redirect('edit_task', pk=pk)
+            messages.error(request, 'Task cannot be blank.')
     else:
-        context = {
-            'get_task': get_task,
-            }
-        
-        return render(request, 'edit_task.html', context)
+        form = TaskForm(initial={'task': task.task})
+
+    context = {'form': form, 'get_task': task}
+    return render(request, 'edit_task.html', context)
 
 
 def delete_task(request, pk):

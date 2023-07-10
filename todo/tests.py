@@ -235,7 +235,6 @@ class TaskModelTest(TestCase):
 # Form Test
 
 class AddTaskFormTest(TestCase):
-
     def setUp(self):
         self.url = reverse('addTask')
 
